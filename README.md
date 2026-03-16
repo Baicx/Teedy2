@@ -23,6 +23,24 @@ A demo is available at [demo.teedy.io](https://demo.teedy.io)
 - "admin" login with "admin" password
 - "demo" login with "password" password 
 
+### Persistent file storage
+
+By default the webapp stores uploaded files under `docs.home` (system property).
+During development the Maven Jetty profile already sets this property to a
+project-relative directory, for example:
+
+```xml
+<systemProperties>
+  <application.mode>dev</application.mode>
+  <docs.home>${project.basedir}/data/docs</docs.home>
+</systemProperties>
+```
+
+Make sure the `data/docs` directory exists and is writeable.  If you start the
+server without setting `docs.home` it will fall back to an OS-specific path
+(e.g. `/var/docs` on Unix) which may be cleared on reboot; that is why files
+can disappear after restarting.
+
 # Features
 
 - Responsive user interface

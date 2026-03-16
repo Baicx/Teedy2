@@ -29,13 +29,22 @@ public class DirectoryUtil {
             // For unit testing, use a temporary directory
             baseDataDir = Paths.get(System.getProperty("java.io.tmpdir"));
         } else {
-            // We are in a webapp environment and nothing is specified, use the default directory for this OS
-            if (EnvironmentUtil.isUnix()) {
-                baseDataDir = Paths.get("/var/docs");
-            } if (EnvironmentUtil.isWindows()) {
-                baseDataDir = Paths.get(EnvironmentUtil.getWindowsAppData() + "\\Sismics\\Docs");
-            } else if (EnvironmentUtil.isMacOs()) {
-                baseDataDir = Paths.get(EnvironmentUtil.getMacOsUserHome() + "/Library/Sismics/Docs");
+            // We are in a webapp environment and nothing is specified.
+            // Prefer a workspace-local data directory if the JVM was started from
+            // the project root; this makes development more predictable.
+            Path projectDir = Paths.get(System.getProperty("user.dir")).resolve("data/docs");
+            try {
+                Files.createDirectories(projectDir);
+                baseDataDir = projectDir;
+            } catch (IOException e) {
+                // Fallback to OS-specific paths
+                if (EnvironmentUtil.isUnix()) {
+                    baseDataDir = Paths.get("/var/docs");
+                } else if (EnvironmentUtil.isWindows()) {
+                    baseDataDir = Paths.get(EnvironmentUtil.getWindowsAppData() + "\\Sismics\\Docs");
+                } else if (EnvironmentUtil.isMacOs()) {
+                    baseDataDir = Paths.get(EnvironmentUtil.getMacOsUserHome() + "/Library/Sismics/Docs");
+                }
             }
         }
 

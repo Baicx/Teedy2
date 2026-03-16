@@ -359,7 +359,9 @@ angular.module('docs',
       url: '/login?redirectState&redirectParams',
       views: {
         'page': {
-          templateUrl: 'partial/docs/login.html',
+          templateUrl: function() {
+            return 'partial/docs/login.html?v=' + Date.now();
+          },
           controller: 'Login'
         }
       }
