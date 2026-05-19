@@ -68,8 +68,8 @@ pipeline {
                         
                         # 容器3: 8084端口
                         docker run -d \\
-                            --name teedy-8084 \\
-                            -p 8084:8080 \\
+                            --name teedy-8085 \\
+                            -p 8085:8080 \\
                             -e "JAVA_OPTS=-Xmx512m" \\
                             --restart unless-stopped \\
                             baicx/teedy:${BUILD_NUMBER}
