@@ -42,7 +42,7 @@ pipeline {
                     sh '''
                         echo "清理旧容器..."
                         for port in 8082 8083 8084; do
-                            CONTAINER_NAME="teedy-$port"
+                            CONTAINER_NAME="teedy-${port}"
                             docker stop ${CONTAINER_NAME} 2>/dev/null || true
                             docker rm ${CONTAINER_NAME} 2>/dev/null || true
                         done
@@ -102,49 +102,38 @@ pipeline {
             }
         }
         
-        stage('Health Check and Monitoring') {
+        stage('Final Status Check') {
             steps {
                 script {
                     sh '''
-                        echo "执行深度健康检查..."
+                        echo "=== 最终状态检查 ==="
+                        ALL_RUNNING=true
                         
-                        ALL_HEALTHY=true
                         for port in 8082 8083 8084; do
                             CONTAINER_NAME="teedy-${port}"
                             
-                            # 检查容器是否运行
-                            if ! docker ps --filter "name=${CONTAINER_NAME}" --filter "status=running" | grep -q "${CONTAINER_NAME}"; then
-                                echo "✗ 容器 ${CONTAINER_NAME} 未运行"
-                                ALL_HEALTHY=false
-                                continue
-                            fi
-                            
-                            # 检查应用响应
-                            RESPONSE_TIME=$(timeout 5 curl -s -w "%{time_total}" -o /dev/null http://localhost:${port}/ || echo "10.000")
-                            
-                            if [ "$(echo "$RESPONSE_TIME > 5" | bc -l 2>/dev/null || echo 1)" = "1" ]; then
-                                echo "⚠ 容器 ${CONTAINER_NAME} 响应慢: ${RESPONSE_TIME}秒"
+                            if docker ps --filter "name=${CONTAINER_NAME}" --filter "status=running" | grep -q "${CONTAINER_NAME}"; then
+                                echo "✓ ${CONTAINER_NAME} 运行正常"
                             else
-                                echo "✓ 容器 ${CONTAINER_NAME} 响应正常: ${RESPONSE_TIME}秒"
-                            fi
-                            
-                            # 检查日志是否有错误
-                            ERROR_COUNT=$(docker logs ${CONTAINER_NAME} --tail 20 2>&1 | grep -i "error\|exception\|fail" | wc -l)
-                            if [ $ERROR_COUNT -gt 0 ]; then
-                                echo "⚠ 容器 ${CONTAINER_NAME} 日志中有 ${ERROR_COUNT} 个错误"
+                                echo "✗ ${CONTAINER_NAME} 未运行"
+                                ALL_RUNNING=false
                             fi
                         done
                         
-                        if [ "$ALL_HEALTHY" = "true" ]; then
-                            echo ""
-                            echo "🎉 所有三个容器部署成功！"
+                        echo ""
+                        if [ "$ALL_RUNNING" = "true" ]; then
+                            echo "🎉 所有三个容器都在运行！"
+                            SERVER_IP=$(hostname -I | awk '{print $1}')
                             echo "访问地址:"
-                            echo "  - 实例1: http://$(hostname -I | awk '{print $1}'):8082"
-                            echo "  - 实例2: http://$(hostname -I | awk '{print $1}'):8083"
-                            echo "  - 实例3: http://$(hostname -I | awk '{print $1}'):8084"
+                            echo "  - 实例1: http://${SERVER_IP}:8082"
+                            echo "  - 实例2: http://${SERVER_IP}:8083"
+                            echo "  - 实例3: http://${SERVER_IP}:8084"
                         else
-                            echo ""
-                            echo "⚠ 部分容器存在问题，请检查"
+                            echo "⚠ 部分容器可能存在问题"
+                            echo "查看容器日志:"
+                            for port in 8082 8083 8084; do
+                                docker logs teedy-${port} --tail 5 2>/dev/null || true
+                            done
                         fi
                     '''
                 }
@@ -158,9 +147,6 @@ pipeline {
             sh '''
                 # 清理 Maven 构建缓存
                 rm -rf target/* 2>/dev/null || true
-                
-                # 清理 Docker 无用镜像
-                docker system prune -f 2>/dev/null || true
             '''
         }
     }
