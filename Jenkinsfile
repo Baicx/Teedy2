@@ -4,11 +4,11 @@ pipeline {
     environment {
         // define environment variable
         // Jenkins credentials configuration
-        DOCKER_HUB_CREDENTIALS = 'dockerhub_credentials' // Docker Hub credentials
+        DOCKER_HUB_CREDENTIALS = 'Teedy' // Docker Hub credentials
         // ID store in Jenkins
         
         // Docker Hub Repository's name
-        DOCKER_IMAGE = 'xx/teedy-app' // your Docker Hub user name and Repository's name
+        DOCKER_IMAGE = 'baicx/teedy' // your Docker Hub user name and Repository's name
         DOCKER_TAG = "${env.BUILD_NUMBER}" // use build number as tag
     }
 
@@ -16,9 +16,9 @@ pipeline {
         stage('Build') {
             steps {
                 checkout scmGit(
-                    branches: [[name: '*/master']],
+                    branches: [[name: '*/main']],
                     extensions: [],
-                    userRemoteConfigs: [[url: 'https://github.com/xx/Teedy.git']]
+                    userRemoteConfigs: [[url: 'https://github.com/Baicx/Teedy2.git']]
                     // your github Repository
                 )
                 sh 'mvn -B -DskipTests clean package'
