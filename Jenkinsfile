@@ -41,7 +41,7 @@ pipeline {
                     // 停止并清理所有旧容器
                     sh '''
                         echo "清理旧容器..."
-                        for port in 8082 8083 8084; do
+                        for port in 8086 8087 8088; do
                             CONTAINER_NAME="teedy-${port}"
                             docker stop ${CONTAINER_NAME} 2>/dev/null || true
                             docker rm ${CONTAINER_NAME} 2>/dev/null || true
@@ -52,24 +52,24 @@ pipeline {
                     sh '''
                         # 容器1: 8082端口
                         docker run -d \\
-                            --name teedy-8082 \\
-                            -p 8082:8080 \\
+                            --name teedy-8086 \\
+                            -p 8086:8080 \\
                             -e "JAVA_OPTS=-Xmx512m" \\
                             --restart unless-stopped \\
                             baicx/teedy:${BUILD_NUMBER}
                         
                         # 容器2: 8083端口
                         docker run -d \\
-                            --name teedy-8083 \\
-                            -p 8083:8080 \\
+                            --name teedy-8087 \\
+                            -p 8087:8080 \\
                             -e "JAVA_OPTS=-Xmx512m" \\
                             --restart unless-stopped \\
                             baicx/teedy:${BUILD_NUMBER}
                         
                         # 容器3: 8084端口
                         docker run -d \\
-                            --name teedy-8085 \\
-                            -p 8085:8080 \\
+                            --name teedy-8088 \\
+                            -p 8088:8080 \\
                             -e "JAVA_OPTS=-Xmx512m" \\
                             --restart unless-stopped \\
                             baicx/teedy:${BUILD_NUMBER}
